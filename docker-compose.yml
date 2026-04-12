@@ -1,0 +1,16 @@
+services:
+  alfred:
+    build: .
+    ports:
+      - "3141:3141"
+    volumes:
+      - ./alfred.yaml:/app/alfred.yaml:ro
+      - alfred-data:/app/data
+    environment:
+      - ANTHROPIC_API_KEY
+      - OPENAI_API_KEY
+      - GEMINI_API_KEY
+    restart: unless-stopped
+
+volumes:
+  alfred-data:

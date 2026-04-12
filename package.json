@@ -1,0 +1,30 @@
+{
+  "name": "alfred-agent",
+  "version": "0.1.0",
+  "description": "The open-source AI agent server. Deploy a customer service agent on your domain in minutes.",
+  "type": "module",
+  "bin": {
+    "alfred": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js",
+    "dev": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@acp-protocol/sdk": "file:../agent protocol/acp-sdk",
+    "@anthropic-ai/sdk": "^0.39.0",
+    "better-sqlite3": "^12.8.0",
+    "openai": "^4.80.0",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

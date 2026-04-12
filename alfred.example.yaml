@@ -1,0 +1,28 @@
+agent:
+  name: support
+  domain: agents.yourcompany.com
+  port: 3141
+  description: "Customer support agent for YourCompany"
+
+ai:
+  provider: anthropic    # or openai
+  model: claude-sonnet-4-6  # or gpt-4o
+  apiKey: ${ANTHROPIC_API_KEY}
+
+rules:
+  - "You are a helpful customer support agent"
+  - "Be polite, professional, and concise"
+  - "If you don't know the answer, say so honestly"
+  - "Never share internal system details or customer data"
+  - "Escalate billing disputes to human support"
+
+capabilities:
+  - name: customer-support
+    description: "Handle general customer inquiries"
+  - name: order-status
+    description: "Check the status of an order by order ID"
+    schema:
+      type: object
+      properties:
+        orderId:
+          type: string
