@@ -1,18 +1,6 @@
 # Alfred
 
-The open-source AI agent server. Deploy a customer service agent on your domain in minutes.
-
-Alfred turns a YAML config file into a fully functional [ACP](https://github.com/clerkboard/acp) agent — with Ed25519 signing, identity, discovery, and AI-powered responses handled automatically. You write the rules. Alfred does the rest.
-
-## Quick start
-
-**1. Install**
-
-```bash
-npm install alfred-agent
-```
-
-**2. Create `alfred.yaml`**
+**Deploy an AI agent on your domain in 5 minutes.**
 
 ```yaml
 agent:
@@ -35,52 +23,62 @@ capabilities:
     description: "Handle customer inquiries"
 ```
 
-**3. Run**
-
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
 npx alfred
 ```
 
-That's it. Your agent is live at `support@agents.yourcompany.com`.
+Your agent is live at `support@agents.yourcompany.com`. Any AI agent on the internet can discover it, verify its identity, and start a conversation — all cryptographically signed, no API keys to share, no platform lock-in.
 
-## What you get
+---
 
-Once running, Alfred provides:
+## Why Alfred?
 
-- **ACP identity** — Ed25519 key pair, DID document, key pinning (generated automatically)
-- **Discovery** — Agent Card at `/.well-known/acp/support.json`, agents.txt, agent index
-- **Signed inbox** — accepts ACP messages, verifies signatures, enforces first-contact handshake
-- **AI responses** — every incoming message is routed through your chosen AI provider with your rules
+Every company will need an AI agent that other agents can talk to. Not a chatbot on your website — an agent with its own identity, its own cryptographic keys, living on your domain.
 
-Other ACP agents can discover yours, complete the handshake, and start having conversations — all authenticated and signed.
+Alfred makes that trivial.
 
-## Configuration
+You write rules in plain English. Alfred handles the protocol: Ed25519 signing, DID identity, key pinning, first-contact handshake, message verification, and AI-powered responses. One YAML file. One command. Done.
 
-### YAML config
+**No platform account.** Your agent runs on your infrastructure, under your domain.
+
+**No vendor lock-in.** Switch between Claude, GPT, and Gemini with one line change.
+
+**No protocol expertise.** You don't need to know what JCS canonicalization is. Alfred does.
+
+---
+
+## Quick start
+
+### 1. Install
+
+```bash
+npm install alfred-agent
+```
+
+### 2. Create `alfred.yaml`
 
 ```yaml
 agent:
-  name: support                      # Agent name (required)
-  domain: agents.yourcompany.com     # Your domain (required)
-  port: 3141                         # Port (default: 3141)
-  description: "What your agent does"
+  name: support
+  domain: agents.yourcompany.com
+  description: "Customer support agent for Acme Corp"
 
 ai:
-  provider: anthropic                # anthropic, openai, or gemini
-  model: claude-sonnet-4-6           # Any model from your provider
-  apiKey: ${ANTHROPIC_API_KEY}       # Env var reference
+  provider: anthropic
+  model: claude-sonnet-4-6
+  apiKey: ${ANTHROPIC_API_KEY}
 
-rules:                               # Plain English rules for the AI
-  - "Be helpful and concise"
-  - "Never share customer data"
-  - "Escalate billing issues to humans"
+rules:
+  - "You are a helpful customer support agent for Acme Corp"
+  - "Be polite, professional, and concise"
+  - "Never share internal system details or customer data"
+  - "Escalate billing disputes to human support"
 
-capabilities:                        # What your agent can do
+capabilities:
   - name: customer-support
-    description: "Handle customer inquiries"
-  - name: check-order
-    description: "Look up order status by order ID"
+    description: "Handle general customer inquiries"
+  - name: order-status
+    description: "Check the status of an order by order ID"
     schema:
       type: object
       properties:
@@ -88,23 +86,48 @@ capabilities:                        # What your agent can do
           type: string
 ```
 
-### Environment variables
+### 3. Run
 
-Every config field can be overridden with env vars. Useful for Docker and PaaS deploys:
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+npx alfred
+```
 
-| Env var | Config equivalent |
-|---------|-------------------|
-| `ALFRED_AGENT_NAME` | `agent.name` |
-| `ALFRED_DOMAIN` | `agent.domain` |
-| `ALFRED_PORT` or `PORT` | `agent.port` |
-| `ALFRED_DESCRIPTION` | `agent.description` |
-| `ALFRED_AI_PROVIDER` | `ai.provider` |
-| `ALFRED_AI_MODEL` | `ai.model` |
-| `ALFRED_AI_API_KEY` | `ai.apiKey` |
+```
+  ┌──────────────────────────────────────────────┐
+  │  Alfred                                       │
+  ├──────────────────────────────────────────────┤
+  │  Agent   : support                            │
+  │  Address : support@agents.yourcompany.com     │
+  │  AI      : anthropic / claude-sonnet-4-6      │
+  │  Port    : 3141                               │
+  │  Rules   : 4                                  │
+  │  Caps    : customer-support, order-status      │
+  └──────────────────────────────────────────────┘
+```
+
+That's it. Your agent is discoverable, authenticated, and responding to messages.
+
+---
+
+## What you get
+
+Once running, Alfred gives your company:
+
+| What | How |
+|------|-----|
+| **An address** | `support@agents.yourcompany.com` — share it like email |
+| **An identity** | Ed25519 key pair + DID document, generated automatically |
+| **Discovery** | Agent Card, agents.txt, agent index — other agents find you |
+| **A signed inbox** | Verifies every incoming message, rejects forgeries |
+| **AI-powered responses** | Your rules, your AI provider, your data |
+| **Message history** | Every conversation logged in SQLite |
+
+---
 
 ## AI providers
 
-Alfred supports three providers out of the box:
+Switch providers with one line. No code changes.
 
 ### Anthropic (Claude)
 
@@ -133,6 +156,8 @@ ai:
   apiKey: ${GEMINI_API_KEY}
 ```
 
+---
+
 ## Deploy
 
 ### Docker
@@ -141,11 +166,11 @@ ai:
 docker compose up
 ```
 
-The included `docker-compose.yml` maps your `alfred.yaml` and passes through API key env vars. Data (keys, pins) is persisted in a Docker volume.
+The included `docker-compose.yml` maps your `alfred.yaml` and passes through API key env vars. Data is persisted in a Docker volume.
 
 ### Railway / Render / Fly.io
 
-1. Push your repo (with `alfred.yaml` included, or use env vars)
+1. Push your repo with `alfred.yaml`
 2. Set your AI API key as an environment variable
 3. Set `ALFRED_DOMAIN` to your production domain
 4. Deploy
@@ -159,7 +184,23 @@ npm install alfred-agent
 npx alfred --config alfred.yaml
 ```
 
-Point your domain's DNS to the server. Alfred handles the rest.
+Point your domain's DNS to the server. Done.
+
+### Environment variables
+
+Every config field can be overridden with env vars — no YAML needed in production:
+
+| Env var | Config equivalent |
+|---------|-------------------|
+| `ALFRED_AGENT_NAME` | `agent.name` |
+| `ALFRED_DOMAIN` | `agent.domain` |
+| `ALFRED_PORT` or `PORT` | `agent.port` |
+| `ALFRED_DESCRIPTION` | `agent.description` |
+| `ALFRED_AI_PROVIDER` | `ai.provider` |
+| `ALFRED_AI_MODEL` | `ai.model` |
+| `ALFRED_AI_API_KEY` | `ai.apiKey` |
+
+---
 
 ## Local development
 
@@ -170,22 +211,23 @@ For testing without a real domain, Alfred can start a [Cloudflare Tunnel](https:
 npx alfred --config alfred.yaml --tunnel
 ```
 
-This assigns a random `*.trycloudflare.com` domain so other ACP agents can reach you during development.
+This assigns a random `*.trycloudflare.com` domain so other ACP agents can reach you during development. No DNS setup, no certificates — just run and test.
+
+---
 
 ## Storage
 
-Alfred uses SQLite by default — zero config, no external database needed. Everything is stored in a single `alfred.db` file:
+Alfred uses **SQLite** by default — zero config, no external database.
 
-- **Key pins** — TOFU keys from agents you've interacted with
-- **Idempotency** — deduplicates messages (auto-cleaned after 24h)
-- **Message history** — every conversation logged with request and response
+| What | Purpose |
+|------|---------|
+| **Key pins** | TOFU keys from agents you've interacted with |
+| **Idempotency** | Deduplicates messages, auto-cleaned after 24h |
+| **Message history** | Every conversation logged with request and response |
 
-```yaml
-agent:
-  dataDir: ./data   # default: ./data
-```
+Everything lives in `data/alfred.db`. Back it up, move it between servers, or inspect it with any SQLite client.
 
-The DB file lives at `data/alfred.db`. Back it up, move it between servers, or inspect it with any SQLite client.
+---
 
 ## How it works
 
@@ -193,30 +235,47 @@ The DB file lives at `data/alfred.db`. Back it up, move it between servers, or i
 Incoming ACP message
   → Signature verification (Ed25519 + JCS)
   → First-contact handshake (if new sender)
-  → Key pinning
+  → Key pinning (TOFU)
   → Route to capability handler
   → AI provider (Claude / GPT / Gemini) with your rules
   → Log to SQLite
   → Signed ACP response
 ```
 
-Alfred handles the entire ACP protocol stack. Your YAML config controls the AI behavior.
+Alfred handles the entire [ACP protocol](https://github.com/clerkboard/acp) stack. Your YAML config controls the AI behavior. You never touch cryptography.
 
-## ACP address format
+---
 
-Your agent's address follows the ACP standard:
+## ACP address
+
+Your agent's address follows the [ACP standard](https://github.com/clerkboard/acp/blob/main/spec/acp-rfc.md):
 
 ```
 {name}@{domain}
 ```
 
-Share it like an email address — on your website, docs, or business card:
+Share it like an email address — on your website, in your docs, on a business card:
 
 ```
 support@agents.yourcompany.com
 ```
 
-Anyone with an ACP agent can contact yours using this address.
+Any ACP agent on the internet can contact yours using this address. The protocol handles identity verification, key exchange, and message signing automatically.
+
+---
+
+## Built on ACP
+
+Alfred is powered by the [Agent Communication Protocol](https://github.com/clerkboard/acp) — an open, federated protocol for AI agent-to-agent communication. ACP gives agents:
+
+- **Federated identity** — no central registry, your domain is your identity
+- **Cryptographic authentication** — every message is signed and verified
+- **Trust-on-first-use** — key pinning like SSH, no certificate authorities
+- **Store-and-forward** — messages survive downtime via relays
+
+[Read the spec](https://github.com/clerkboard/acp/blob/main/spec/acp-rfc.md) | [Reference implementations](https://github.com/clerkboard/acp)
+
+---
 
 ## License
 
