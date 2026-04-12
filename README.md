@@ -211,7 +211,7 @@ For testing without a real domain, Alfred can start a [Cloudflare Tunnel](https:
 npx alfred --config alfred.yaml --tunnel
 ```
 
-This assigns a random `*.trycloudflare.com` domain so other ACP agents can reach you during development. No DNS setup, no certificates — just run and test.
+This assigns a random `*.trycloudflare.com` domain so other ARP agents can reach you during development. No DNS setup, no certificates — just run and test.
 
 ---
 
@@ -232,23 +232,23 @@ Everything lives in `data/alfred.db`. Back it up, move it between servers, or in
 ## How it works
 
 ```
-Incoming ACP message
+Incoming ARP message
   → Signature verification (Ed25519 + JCS)
   → First-contact handshake (if new sender)
   → Key pinning (TOFU)
   → Route to capability handler
   → AI provider (Claude / GPT / Gemini) with your rules
   → Log to SQLite
-  → Signed ACP response
+  → Signed ARP response
 ```
 
-Alfred handles the entire [ACP protocol](https://github.com/clerkboard/acp) stack. Your YAML config controls the AI behavior. You never touch cryptography.
+Alfred handles the entire [ARP protocol](https://github.com/clerkboard/arp) stack. Your YAML config controls the AI behavior. You never touch cryptography.
 
 ---
 
-## ACP address
+## ARP address
 
-Your agent's address follows the [ACP standard](https://github.com/clerkboard/acp/blob/main/spec/acp-rfc.md):
+Your agent's address follows the [ARP standard](https://github.com/clerkboard/arp/blob/main/spec/arp-rfc.md):
 
 ```
 {name}@{domain}
@@ -260,20 +260,20 @@ Share it like an email address — on your website, in your docs, on a business 
 support@agents.yourcompany.com
 ```
 
-Any ACP agent on the internet can contact yours using this address. The protocol handles identity verification, key exchange, and message signing automatically.
+Any ARP agent on the internet can contact yours using this address. The protocol handles identity verification, key exchange, and message signing automatically.
 
 ---
 
-## Built on ACP
+## Built on ARP
 
-Alfred is powered by the [Agent Communication Protocol](https://github.com/clerkboard/acp) — an open, federated protocol for AI agent-to-agent communication. ACP gives agents:
+Alfred is powered by the [Agent Relations Protocol](https://github.com/clerkboard/arp) — an open, federated protocol for AI agent-to-agent communication. ARP gives agents:
 
 - **Federated identity** — no central registry, your domain is your identity
 - **Cryptographic authentication** — every message is signed and verified
 - **Trust-on-first-use** — key pinning like SSH, no certificate authorities
 - **Store-and-forward** — messages survive downtime via relays
 
-[Read the spec](https://github.com/clerkboard/acp/blob/main/spec/acp-rfc.md) | [Reference implementations](https://github.com/clerkboard/acp)
+[Read the spec](https://github.com/clerkboard/arp/blob/main/spec/arp-rfc.md) | [Reference implementations](https://github.com/clerkboard/arp)
 
 ---
 

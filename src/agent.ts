@@ -1,6 +1,6 @@
 import { execSync, spawn } from 'node:child_process';
-import { ACPAgent } from '@acp-protocol/sdk';
-import type { HandlerMessage } from '@acp-protocol/sdk';
+import { ARPAgent } from '@arp-protocol/sdk';
+import type { HandlerMessage } from '@arp-protocol/sdk';
 import type { AlfredConfig } from './config.js';
 import { createProvider } from './ai/index.js';
 import type { AIProvider, AIMessage } from './ai/index.js';
@@ -42,7 +42,7 @@ async function startTunnel(port: number): Promise<string> {
   });
 }
 
-export async function startAlfred(config: AlfredConfig, options?: { tunnel?: boolean }): Promise<ACPAgent> {
+export async function startAlfred(config: AlfredConfig, options?: { tunnel?: boolean }): Promise<ARPAgent> {
   const ai = createProvider(config.ai.provider, config.ai.apiKey, config.ai.model);
   const systemPrompt = buildSystemPrompt(config);
 
@@ -64,7 +64,7 @@ export async function startAlfred(config: AlfredConfig, options?: { tunnel?: boo
   const reapTimer = setInterval(() => db.reapStaleMessages(), 5 * 60 * 1000);
   reapTimer.unref();
 
-  const agent = new ACPAgent({
+  const agent = new ARPAgent({
     name: config.agent.name,
     domain,
     port,
