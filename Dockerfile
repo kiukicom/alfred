@@ -1,16 +1,34 @@
+# syntax=docker/dockerfile:1.7
+
+# ---- build stage ----
 FROM node:22-alpine AS build
 WORKDIR /app
+
+# Install all deps (including dev) against the lockfile
 COPY package.json package-lock.json* ./
 RUN npm ci
+
+# Compile TypeScript
 COPY tsconfig.json ./
 COPY src/ src/
-RUN npx tsc
+RUN npm run build
 
-FROM node:22-alpine
+# ---- production stage ----
+FROM node:22-alpine AS runtime
 WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Production deps only
 COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev
-COPY --from=build /app/dist/ dist/
-VOLUME /app/data
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Compiled output
+COPY --from=build /app/dist/ ./dist/
+
+# Persist TOFU key pins, idempotency cache, message history
+VOLUME ["/app/data"]
+
 EXPOSE 3141
-CMD ["node", "dist/cli.js"]
+
+ENTRYPOINT ["node", "dist/cli.js", "--config", "/config/alfred.yaml"]

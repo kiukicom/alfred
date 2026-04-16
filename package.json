@@ -13,7 +13,7 @@
     "dev": "tsx src/cli.ts"
   },
   "dependencies": {
-    "@arp-protocol/sdk": "file:../agent protocol/arp-sdk",
+    "@agentrelationsprotocol/sdk": "^0.4.0",
     "@anthropic-ai/sdk": "^0.39.0",
     "better-sqlite3": "^12.8.0",
     "openai": "^4.80.0",

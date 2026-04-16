@@ -1,5 +1,12 @@
 node_modules
-dist
-data
-*.log
 .git
+.gitignore
+dist
+test
+.env
+.env.*
+*.log
+data
+.DS_Store
+.github
+docker-compose.yml

@@ -1,6 +1,6 @@
 import { execSync, spawn } from 'node:child_process';
-import { ARPAgent } from '@arp-protocol/sdk';
-import type { HandlerMessage } from '@arp-protocol/sdk';
+import { ARPAgent } from '@agentrelationsprotocol/sdk';
+import type { HandlerMessage } from '@agentrelationsprotocol/sdk';
 import type { AlfredConfig } from './config.js';
 import { createProvider } from './ai/index.js';
 import type { AIProvider, AIMessage } from './ai/index.js';

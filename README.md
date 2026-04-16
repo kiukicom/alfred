@@ -160,13 +160,47 @@ ai:
 
 ## Deploy
 
-### Docker
+### Run with Docker
+
+Pre-built multi-arch images (`linux/amd64`, `linux/arm64`) are published to GitHub Container Registry on every push to `main` and on every release:
+
+```bash
+docker run \
+  -v $PWD/alfred.yaml:/config/alfred.yaml:ro \
+  -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
+  -p 3141:3141 \
+  ghcr.io/clerkboard/alfred:latest
+```
+
+Mount your `alfred.yaml` at `/config/alfred.yaml` — that's where the container looks for it. Pass any AI API keys your config references as env vars. The image persists its SQLite store (key pins, idempotency cache, message history) in `/app/data`, so mount a volume there if you want the data to survive restarts:
+
+```bash
+docker run \
+  -v $PWD/alfred.yaml:/config/alfred.yaml:ro \
+  -v alfred-data:/app/data \
+  -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
+  -p 3141:3141 \
+  ghcr.io/clerkboard/alfred:latest
+```
+
+**Tags**
+
+| Tag | What it points to |
+|-----|-------------------|
+| `latest` | Most recent published release |
+| `vX.Y.Z`, `X.Y`, `X` | Specific release (semver) |
+| `main` | Latest commit on `main` (bleeding edge) |
+| `sha-<short>` | Specific commit |
+
+Pin to a release tag in production.
+
+### Docker Compose
 
 ```bash
 docker compose up
 ```
 
-The included `docker-compose.yml` maps your `alfred.yaml` and passes through API key env vars. Data is persisted in a Docker volume.
+The included `docker-compose.yml` uses the published image, maps your `alfred.yaml`, passes through API key env vars, and persists data in a named volume.
 
 ### Railway / Render / Fly.io
 

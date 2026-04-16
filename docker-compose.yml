@@ -1,10 +1,11 @@
 services:
   alfred:
-    build: .
+    # Use the published image by default; override with `build: .` for local dev
+    image: ghcr.io/clerkboard/alfred:latest
     ports:
       - "3141:3141"
     volumes:
-      - ./alfred.yaml:/app/alfred.yaml:ro
+      - ./alfred.yaml:/config/alfred.yaml:ro
       - alfred-data:/app/data
     environment:
       - ANTHROPIC_API_KEY
