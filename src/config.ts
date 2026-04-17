@@ -1,10 +1,26 @@
 import fs from 'node:fs';
 import { parse } from 'yaml';
 
+export interface AlfredTool {
+  name: string;
+  description: string;
+  parameters: Record<string, unknown>;
+  endpoint: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  headers?: Record<string, string>;
+}
+
 export interface AlfredCapability {
   name: string;
   description: string;
   schema?: Record<string, unknown>;
+  open?: boolean;
+}
+
+export interface StorageConfig {
+  driver: 'sqlite' | 'supabase';
+  url?: string;
+  key?: string;
 }
 
 export interface AlfredConfig {
@@ -14,14 +30,17 @@ export interface AlfredConfig {
     port?: number;
     dataDir?: string;
     description: string;
+    memory?: number;
   };
   ai: {
     provider: 'anthropic' | 'openai' | 'gemini';
     model: string;
     apiKey: string;
   };
+  storage?: StorageConfig;
   rules: string[];
   capabilities: AlfredCapability[];
+  tools?: AlfredTool[];
 }
 
 /**
@@ -45,8 +64,11 @@ export function loadConfig(path: string): AlfredConfig {
 
   // Defaults
   config.agent.port ??= parseInt(process.env.PORT ?? '3141', 10);
+  config.agent.memory ??= 20;
   config.capabilities ??= [];
   config.rules ??= [];
+  config.tools ??= [];
+  config.storage ??= { driver: 'sqlite' };
 
   // Validate required fields
   if (!config.agent.name) die('agent.name is required');

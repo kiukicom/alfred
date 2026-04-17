@@ -3,7 +3,7 @@ import { AnthropicProvider } from './anthropic.js';
 import { OpenAIProvider } from './openai.js';
 import { GeminiProvider } from './gemini.js';
 
-export type { AIProvider, AIMessage } from './types.js';
+export type { AIProvider, AIMessage, AIToolDefinition, AIChatResult, AIToolCall } from './types.js';
 
 export function createProvider(
   provider: 'anthropic' | 'openai' | 'gemini',

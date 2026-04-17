@@ -3,10 +3,17 @@ agent:
   domain: agents.yourcompany.com
   port: 3141
   description: "Customer support agent for YourCompany"
+  memory: 20          # conversation turns to remember per agent (default: 20)
+
+# Storage backend: sqlite (default) or supabase
+storage:
+  driver: sqlite      # or supabase
+  # url: ${SUPABASE_URL}       # required for supabase
+  # key: ${SUPABASE_KEY}       # required for supabase (service_role key)
 
 ai:
-  provider: anthropic    # or openai
-  model: claude-sonnet-4-6  # or gpt-4o
+  provider: anthropic    # or openai, gemini
+  model: claude-sonnet-4-6  # or gpt-4o, gemini-2.5-pro
   apiKey: ${ANTHROPIC_API_KEY}
 
 rules:
@@ -17,8 +24,17 @@ rules:
   - "Escalate billing disputes to human support"
 
 capabilities:
+  - name: faq
+    description: "Answer frequently asked questions"
+    open: true          # no handshake needed — any agent can query
+
+  - name: store-hours
+    description: "Check store hours and locations"
+    open: true
+
   - name: customer-support
     description: "Handle general customer inquiries"
+
   - name: order-status
     description: "Check the status of an order by order ID"
     schema:
@@ -26,3 +42,36 @@ capabilities:
       properties:
         orderId:
           type: string
+
+# Tools let the AI call your internal APIs to get real data
+tools:
+  - name: lookup_order
+    description: "Look up an order by ID and return its status, items, and tracking"
+    endpoint: https://api.yourcompany.com/orders/lookup
+    method: POST
+    headers:
+      Authorization: "Bearer ${INTERNAL_API_KEY}"
+    parameters:
+      type: object
+      properties:
+        orderId:
+          type: string
+          description: "The order ID to look up"
+      required:
+        - orderId
+
+  - name: search_products
+    description: "Search the product catalogue by name or category"
+    endpoint: https://api.yourcompany.com/products/search
+    method: GET
+    headers:
+      Authorization: "Bearer ${INTERNAL_API_KEY}"
+    parameters:
+      type: object
+      properties:
+        query:
+          type: string
+          description: "Search query"
+        category:
+          type: string
+          description: "Filter by category"

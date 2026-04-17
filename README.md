@@ -19,8 +19,20 @@ rules:
   - "Never share internal system details"
 
 capabilities:
+  - name: faq
+    description: "Answer FAQs"
+    open: true
   - name: customer-support
     description: "Handle customer inquiries"
+
+tools:
+  - name: lookup_order
+    description: "Look up order status by ID"
+    endpoint: https://api.yourcompany.com/orders/lookup
+    parameters:
+      type: object
+      properties:
+        orderId: { type: string }
 ```
 
 ```bash
@@ -121,7 +133,88 @@ Once running, Alfred gives your company:
 | **Discovery** | Agent Card, agents.txt, agent index — other agents find you |
 | **A signed inbox** | Verifies every incoming message, rejects forgeries |
 | **AI-powered responses** | Your rules, your AI provider, your data |
+| **Conversation memory** | Remembers context across messages from the same agent |
+| **Tools** | AI calls your APIs to look up real data before answering |
+| **Open capabilities** | Some capabilities work without a handshake — instant queries |
 | **Message history** | Every conversation logged in SQLite |
+
+---
+
+## Tools
+
+Tools let the AI call your internal APIs. Instead of guessing, the AI looks up real data — order status, product info, account details — then responds with the answer.
+
+Define them in YAML:
+
+```yaml
+tools:
+  - name: lookup_order
+    description: "Look up an order by ID and return its status, items, and tracking"
+    endpoint: https://api.yourcompany.com/orders/lookup
+    method: POST
+    headers:
+      Authorization: "Bearer ${INTERNAL_API_KEY}"
+    parameters:
+      type: object
+      properties:
+        orderId:
+          type: string
+          description: "The order ID to look up"
+      required:
+        - orderId
+
+  - name: search_products
+    description: "Search the product catalogue"
+    endpoint: https://api.yourcompany.com/products/search
+    method: GET
+    parameters:
+      type: object
+      properties:
+        query:
+          type: string
+```
+
+When an agent asks "what's the status of order #12345?", the AI:
+1. Recognises it needs the `lookup_order` tool
+2. Calls your API with `{ "orderId": "12345" }`
+3. Gets back real order data
+4. Responds with the actual status
+
+The AI can chain up to 5 tool calls per request. Tools work with all providers (Claude, GPT, Gemini).
+
+---
+
+## Open capabilities
+
+Mark a capability as `open: true` and any agent can query it without a handshake — no negotiate, no relation, no friction. Perfect for public info:
+
+```yaml
+capabilities:
+  - name: store-hours
+    description: "Check store hours and locations"
+    open: true       # anyone can ask
+
+  - name: customer-support
+    description: "Handle support tickets"
+    # open defaults to false — requires handshake
+```
+
+Open capabilities are synchronous and single-exchange. If an agent wants ongoing interaction, they still complete the standard first-contact handshake.
+
+---
+
+## Conversation memory
+
+Alfred remembers previous messages from the same agent. If an agent asks about an order, then follows up with "what about the shipping?", Alfred knows the context.
+
+```yaml
+agent:
+  memory: 20    # remember last 20 turns per agent (default)
+```
+
+Memory is per-agent — conversations with `agent-a@company.com` are separate from `agent-b@other.com`. Stored in SQLite, survives restarts.
+
+Set `memory: 0` to disable.
 
 ---
 
@@ -217,15 +310,42 @@ This assigns a random `*.trycloudflare.com` domain so other ARP agents can reach
 
 ## Storage
 
-Alfred uses **SQLite** by default — zero config, no external database.
+Alfred has a pluggable storage layer. Pick the backend that fits your stack.
+
+### SQLite (default)
+
+Zero config. Everything lives in `data/alfred.db`. Perfect for single-server deploys.
+
+```yaml
+storage:
+  driver: sqlite
+```
+
+### Supabase
+
+Use a hosted Postgres database. No extra dependencies — Alfred talks to Supabase via REST API.
+
+```yaml
+storage:
+  driver: supabase
+  url: ${SUPABASE_URL}
+  key: ${SUPABASE_KEY}   # service_role key (not anon)
+```
+
+Tables are created automatically on first run (`alfred_pins`, `alfred_idempotency`, `alfred_messages`, `alfred_conversations`).
+
+### What's stored
 
 | What | Purpose |
 |------|---------|
 | **Key pins** | TOFU keys from agents you've interacted with |
 | **Idempotency** | Deduplicates messages, auto-cleaned after 24h |
+| **Conversations** | Per-agent conversation history for multi-turn memory |
 | **Message history** | Every conversation logged with request and response |
 
-Everything lives in `data/alfred.db`. Back it up, move it between servers, or inspect it with any SQLite client.
+### Adding a new backend
+
+Implement the `AlfredStore` interface in `src/db/types.ts` and add a case to `src/db/index.ts`. The interface has 10 methods — pins, idempotency, messages, conversations, and close.
 
 ---
 
@@ -234,10 +354,13 @@ Everything lives in `data/alfred.db`. Back it up, move it between servers, or in
 ```
 Incoming ARP message
   → Signature verification (Ed25519 + JCS)
-  → First-contact handshake (if new sender)
+  → First-contact handshake (if new sender, unless open capability)
   → Key pinning (TOFU)
   → Route to capability handler
-  → AI provider (Claude / GPT / Gemini) with your rules
+  → Load conversation history for this agent
+  → AI provider (Claude / GPT / Gemini) with your rules + history
+  → Tool calls if needed (up to 5 rounds)
+  → Save conversation turn
   → Log to SQLite
   → Signed ARP response
 ```
